@@ -1,0 +1,21 @@
+#!/bin/bash -e
+
+if [ -z "$SSH_PRIVATE_KEY" ]; then
+	>&2 echo "Set SSH_PRIVATE_KEY environment variable"
+	exit 1
+fi
+
+if ! [ -d ~/.ssh ]
+then
+  mkdir  -p ~/.ssh
+  echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+  chmod 600 ~/.ssh/id_rsa
+  ssh-keyscan -H 22 "$DOKKU_URL" >> ~/.ssh/known_hosts
+fi
+
+if $(ssh dokku@$DOKKU_URL apps:list | grep -i -q "^$APP_NAME$")
+then
+    echo "L'application existe"
+else 
+    ssh dokku@$DOKKU_URL apps:create $APP_NAME
+fi

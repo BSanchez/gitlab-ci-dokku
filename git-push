@@ -20,9 +20,13 @@ if [[ $url =~ ^ssh://[^/]+:([0-9]+) ]]; then
 fi
 
 # TODO: skip on multiple runs
-mkdir -p ~/.ssh
-echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-chmod 600 ~/.ssh/id_rsa
-ssh-keyscan -H $ssh_port "$ssh_host" >> ~/.ssh/known_hosts
+if ! [ -d ~/.ssh ]
+then
+  mkdir  -p ~/.ssh
+  echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+  chmod 600 ~/.ssh/id_rsa
+  ssh-keyscan -H 22 "$DOKKU_URL" >> ~/.ssh/known_hosts
+fi
+
 
 git push $url ${CI_COMMIT_SHA:-HEAD}:refs/heads/${branch:-master} $([ -z "$DISABLE_FORCE_PUSH" ] && echo --force)

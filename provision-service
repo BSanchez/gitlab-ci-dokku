@@ -1,0 +1,29 @@
+#!/bin/bash -e
+SERVICE="$1"
+SERVICE_NAME="$APP_NAME-$SERVICE"
+
+if [ -z "$SSH_PRIVATE_KEY" ]; then
+	>&2 echo "Set SSH_PRIVATE_KEY environment variable"
+	exit 1
+fi
+
+if ! [ -d ~/.ssh ]
+then
+  mkdir  -p ~/.ssh
+  echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+  chmod 600 ~/.ssh/id_rsa
+  ssh-keyscan -H 22 "$DOKKU_URL" >> ~/.ssh/known_hosts
+fi
+
+if $(ssh dokku@$DOKKU_URL $SERVICE:list | awk '{print $1}' | grep -i -q "^$SERVICE_NAME$")
+then 
+    echo "Le service existe"
+else
+    ssh dokku@$DOKKU_URL $SERVICE:create $SERVICE_NAME
+fi
+
+if ! ssh dokku@$DOKKU_URL $SERVICE:linked $SERVICE_NAME $APP_NAME
+then
+  ssh dokku@$DOKKU_URL $SERVICE:link $SERVICE_NAME $APP_NAME
+fi
+

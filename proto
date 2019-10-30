@@ -1,0 +1,29 @@
+echo $1
+APP_NAME="test"
+SERVICE="postgres"
+SERVICE_NAME="test-postgres"
+
+if $(ssh dokku@dokku.dezup.net apps:list | grep -i -q "^$APP_NAME$")
+then
+    echo "L'application existe"
+else 
+    ssh dokku@dokku.dezup.net apps:create $APP_NAME
+fi
+
+if $(ssh dokku@dokku.dezup.net $SERVICE:list | awk '{print $1}' | grep -i -q "^$SERVICE_NAME$")
+then 
+    echo "Le service existe"
+else
+    ssh dokku@dokku.dezup.net $SERVICE:create $SERVICE_NAME
+fi
+
+if ! ssh dokku@dokku.dezup.net $SERVICE:linked $SERVICE_NAME $APP_NAME
+then
+  ssh dokku@dokku.dezup.net $SERVICE:link $SERVICE_NAME $APP_NAME
+fi
+
+if [ -d "./existepas" ]
+then
+   echo "Directory ./existe"
+fi
+
